@@ -1,0 +1,72 @@
+### Change permission of Keytab file 
+########## PYTHON SCRIPT ###########
+import os
+import stat
+
+# Path to the file containing usernames and emails
+user_file = "users.txt"
+
+# Desired permissions (400 for read for owner only)
+desired_permissions = 0o400
+
+# Check if the user file exists
+if os.path.isfile(user_file):
+    print(f"User file {user_file} exists.")
+    
+    # Read the user file
+    with open(user_file, 'r') as file:
+        for line in file:
+            # Extract the username (first column)
+            username = line.split()[0]
+            
+            # Construct the expected keytab file path in the user's home directory
+            keytab_file = f"/home/{username}/{username}.keytab"  # Adjust the keytab file name as necessary
+            
+            # Check if the keytab file exists
+            if os.path.isfile(keytab_file):
+                # Change the permissions to 400
+                os.chmod(keytab_file, desired_permissions)
+                print(f"Changed permissions of {keytab_file} to {oct(desired_permissions)}.")
+            else:
+                print(f"Keytab file {keytab_file} does not exist for user {username}.")
+else:
+    # Handle the case where the user file does not exist
+    print(f"User file {user_file} does not exist.")
+
+
+########## BASH SCRIPT ###################
+#!/bin/bash
+
+# Path to the file containing usernames and emails
+user_file="users.txt"
+
+# Check if the user file exists
+if [[ -f "$user_file" ]]; then
+    # File exists; you can proceed with your operations
+    echo "User file $user_file exists."
+
+    # Desired permissions (400 for read for owner only)
+    desired_permissions="400"
+
+    # Read the file and iterate through each line
+    for line in $(cat "$user_file"); do
+        # Extract the username (first column)
+        username=$(echo "$line" | awk '{print $1}')
+        
+        # Construct the expected keytab file path in the user's home directory
+        keytab_file="/home/$username/${username}.keytab"  # Adjust the keytab file name as necessary
+
+        # Check if the keytab file exists
+        if [[ -f "$keytab_file" ]]; then
+            # Change the permissions to 400
+            chmod "$desired_permissions" "$keytab_file"
+            echo "Changed permissions of $keytab_file to $desired_permissions."
+        else
+            echo "Keytab file $keytab_file does not exist for user $username."
+        fi
+    done
+else
+    # File does not exist; handle the error
+    echo "User file $user_file does not exist."
+    exit 1
+fi
