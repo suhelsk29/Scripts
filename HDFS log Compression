@@ -1,0 +1,35 @@
+Hdfs audit log compression
+Python hdfsaudilogcompression .py > var/log/audit.log
+#!/bin/python
+
+import datetime
+import subprocess
+
+todays_date = datetime.date.today()
+tdelta = datetime.timedelta(days=1)
+previous_date = todays_date - tdelta
+
+# Running below command to compress the file
+file_name = "/var/log/hadoop/hdfs/hdfs-audit.log.{}".format(previous_date)
+
+# command = "gzip /var/log/hadoop/hdfs/hdfs-audit.log.{}".format(previous_date)
+# command = "/usr/bin/lz4 /var/log/hadoop/hdfs/hdfs-audit.log.{}".format(previous_date)
+command = "/usr/bin/lz4 -rm /var/log/hadoop/hdfs/hdfs-audit.log.{}".format(previous_date) + " " + \
+           "/hadoop-b/archived_hdfs_audit_logs/hdfs-audit.log.{}".format(previous_date) + ".lz4"
+
+args = command.split()
+
+print("Commands arguments will be {}".format(args))
+
+run_cmd = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+stdout_output, stderr_output = run_cmd.communicate()
+return_code = run_cmd.returncode
+
+print(stderr_output)
+print(return_code)
+
+if return_code == 1:
+    print("May be this is a standBy NN. Command has failed with.")
+    print("\nError:\n{}".format(stderr_output))
+else:
+    print("lz4 command completed successfully")
